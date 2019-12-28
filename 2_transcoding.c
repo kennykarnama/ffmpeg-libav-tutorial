@@ -264,7 +264,7 @@ static int encode_frame(TranscodeContext *decoder_context, TranscodeContext *enc
 static int prepare_video_encoder(TranscodeContext *encoder_context, TranscodeContext *decoder_context) {
   int index = decoder_context->video_stream_index;
   encoder_context->stream[index] = avformat_new_stream(encoder_context->format_context, NULL);
-  encoder_context->codec[index] = avcodec_find_encoder_by_name("libx264");
+  encoder_context->codec[index] = avcodec_find_encoder_by_name("libx265");
 
   if (!encoder_context->codec[index]) {
     logging("could not find the proper codec");
@@ -281,9 +281,10 @@ static int prepare_video_encoder(TranscodeContext *encoder_context, TranscodeCon
   AVDictionary *encoder_options = NULL;
 
   AVCodecContext *encoder_codec_context = encoder_context->codec_context[index];
-  av_opt_set(encoder_context->codec_context[index]->priv_data, "preset", "fast", 0);
-//  av_opt_set(encoder_context->codec_context[index]->priv_data, "sc_threshold", "0", 0);
-  av_opt_set(encoder_context->codec_context[index]->priv_data, "x264opts", "keyint=60:min-keyint=60:scenecut=-1", 0);
+  av_opt_set(encoder_context->codec_context[index]->priv_data, "preset", "slow", 0);
+  av_opt_set(encoder_context->codec_context[index]->priv_data, "sc_threshold", "0", 0);
+  av_opt_set(encoder_context->codec_context[index]->priv_data, "x265-params", "keyint=60:min-keyint=60:scenecut=0", 0);
+  av_opt_set(encoder_context->codec_context[index]->priv_data, "crf", "18", 0);
 
   //encoder_codec_context->gop_size = 60;
   //encoder_codec_context->keyint_min = 60;
