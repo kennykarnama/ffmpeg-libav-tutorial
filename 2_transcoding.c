@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 
   while (av_read_frame(decoder_context->format_context, input_packet) >= 0)
   {
-    logging("AVPacket->pts %" PRId64, input_packet->pts);
+    //logging("AVPacket->pts %" PRId64, input_packet->pts);
 
     if (input_packet->stream_index == decoder_context->video_stream_index) {
       response = decode_packet(
@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
         logging("error while copying audio stream");
         return -1;
       }
-      logging("\tfinish copying packets without reencoding");
+      //logging("\tfinish copying packets without reencoding");
     }
   }
   // flush all frames
@@ -199,15 +199,15 @@ static int decode_packet(TranscodeContext *decoder_context, TranscodeContext *en
 
     if (response >= 0) {
       if (codec_context->codec_type == AVMEDIA_TYPE_VIDEO) {
-        logging(
-            "\tEncoding VIDEO Frame %d (type=%c, size=%d bytes) pts %d key_frame %d [DTS %d]",
-            codec_context->frame_number,
-            av_get_picture_type_char(frame->pict_type),
-            frame->pkt_size,
-            frame->pts,
-            frame->key_frame,
-            frame->coded_picture_number
-            );
+       // logging(
+       //     "\tEncoding VIDEO Frame %d (type=%c, size=%d bytes) pts %d key_frame %d [DTS %d]",
+       //     codec_context->frame_number,
+       //     av_get_picture_type_char(frame->pict_type),
+       //     frame->pkt_size,
+       //     frame->pts,
+       //     frame->key_frame,
+       //     frame->coded_picture_number
+       //     );
         encode_frame(decoder_context, encoder_context, encoder_context->format_context, encoder_context->codec_context[stream_index], frame, stream_index);
       }
       av_frame_unref(frame);
@@ -226,7 +226,7 @@ static int encode_frame(TranscodeContext *decoder_context, TranscodeContext *enc
 
   int ret;
   if (frame)
-    logging("Send frame %3"PRId64"", frame->pts);
+    //logging("Send frame %3"PRId64"", frame->pts);
   ret = avcodec_send_frame(codec_context, frame);
 
   while (ret >= 0) {
@@ -253,7 +253,7 @@ static int encode_frame(TranscodeContext *decoder_context, TranscodeContext *enc
       logging("Error %d while receiving a packet from the decoder: %s", ret, av_err2str(ret));
     }
 
-    logging("Write packet %d (size=%d)", output_packet->pts, output_packet->size);
+    //logging("Write packet %d (size=%d)", output_packet->pts, output_packet->size);
   }
   av_packet_unref(output_packet);
   av_packet_free(&output_packet);
@@ -277,16 +277,17 @@ static int prepare_video_encoder(TranscodeContext *encoder_context, TranscodeCon
     return -1;
   }
 
-  // how to free this?
+  // how to free this? why? how is this useful?
   AVDictionary *encoder_options = NULL;
-  av_opt_set(&encoder_options, "keyint", "60", 0);
-  av_opt_set(&encoder_options, "min-keyint", "60", 0);
-  av_opt_set(&encoder_options, "no-scenecut", "1", 0);
 
   AVCodecContext *encoder_codec_context = encoder_context->codec_context[index];
-  av_opt_set(encoder_codec_context->priv_data, "keyint", "60", 0);
-  av_opt_set(encoder_codec_context->priv_data, "min-keyint", "60", 0);
-  av_opt_set(encoder_codec_context->priv_data, "no-scenecut", "1", 0);
+  av_opt_set(encoder_context->codec_context[index]->priv_data, "preset", "fast", 0);
+//  av_opt_set(encoder_context->codec_context[index]->priv_data, "sc_threshold", "0", 0);
+  av_opt_set(encoder_context->codec_context[index]->priv_data, "x264opts", "keyint=60:min-keyint=60:scenecut=-1", 0);
+
+  //encoder_codec_context->gop_size = 60;
+  //encoder_codec_context->keyint_min = 60;
+  //encoder_codec_context->bit_rate = 60; see options for it
 
   encoder_codec_context->height = decoder_context->codec_context[index]->height;
   encoder_codec_context->width = decoder_context->codec_context[index]->width;
@@ -299,15 +300,18 @@ static int prepare_video_encoder(TranscodeContext *encoder_context, TranscodeCon
 
   encoder_context->codec_context[index]->time_base = decoder_context->stream[index]->time_base;
 
+  if (avcodec_open2(encoder_context->codec_context[index], encoder_context->codec[index], &encoder_options) < 0) {
+    logging("could not open the codec");
+    return -1;
+  }
+
   if (avcodec_parameters_from_context(encoder_context->stream[index]->codecpar, encoder_context->codec_context[index]) < 0) {
     logging("could not copy encoder parameters to output stream");
     return -1;
   }
 
-  if (avcodec_open2(encoder_context->codec_context[index], encoder_context->codec[index], &encoder_options) < 0) {
-    logging("could not open the codec");
-    return -1;
-  }
+
+
 
   encoder_context->stream[index]->time_base = encoder_context->codec_context[index]->time_base;
   return 0;
