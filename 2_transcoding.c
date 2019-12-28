@@ -289,6 +289,10 @@ static int prepare_video_encoder(TranscodeContext *encoder_context, TranscodeCon
   //encoder_codec_context->gop_size = 60;
   //encoder_codec_context->keyint_min = 60;
   //encoder_codec_context->bit_rate = 60; see options for it
+  //+  encoder_codec_context->bit_rate = 1200 * 1000;
+  //+  encoder_codec_context->rc_max_rate = 1200 * 1000;
+  //+  encoder_codec_context->rc_min_rate = 1200 * 1000;
+  //+  encoder_codec_context->rc_buffer_size = 2 * 1200 * 1000;
 
   encoder_codec_context->height = decoder_context->codec_context[index]->height;
   encoder_codec_context->width = decoder_context->codec_context[index]->width;
