@@ -43,6 +43,27 @@ int main(int argc, char *argv[])
     return -1;
   }
 
+  AVCodecContext *cc = decoder_context->codec_context[decoder_context->video_stream_index];
+  logging("input width=%d height=%d fr.num=%d fr.den=%d tb.num=%d tb.den=%d ticks=%d \n",
+          cc->width,
+          cc->height,
+          cc->framerate.num,
+          cc->framerate.den,
+          cc->time_base.num,
+          cc->time_base.den,
+          cc->ticks_per_frame
+      );
+  AVCodecContext *ccc = encoder_context->codec_context[decoder_context->video_stream_index];
+  logging("output width=%d height=%d fr.num=%d fr.den=%d tb.num=%d tb.den=%d ticks=%d \n",
+          ccc->width,
+          ccc->height,
+          ccc->framerate.num,
+          ccc->framerate.den,
+          ccc->time_base.num,
+          ccc->time_base.den,
+          ccc->ticks_per_frame
+      );
+
   AVFrame *input_frame = av_frame_alloc();
   if (!input_frame) {
     logging("failed to allocated memory for AVFrame");
