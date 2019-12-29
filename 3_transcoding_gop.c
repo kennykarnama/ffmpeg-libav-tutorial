@@ -377,6 +377,13 @@ static int prepare_encoder(TranscodeContext *encoder_context, TranscodeContext *
     return -1;
   }
 
+  int i = encoder_context->video_stream_index;
+  logging("Encoder Video");
+  logging("\tAVStream->time_base before open coded %d/%d", encoder_context->stream[i]->time_base.num, encoder_context->stream[i]->time_base.den);
+  logging("\tAVStream->r_frame_rate before open coded %d/%d", encoder_context->stream[i]->r_frame_rate.num, encoder_context->stream[i]->r_frame_rate.den);
+  logging("\tAVStream->start_time %" PRId64, encoder_context->stream[i]->start_time);
+  logging("\tAVStream->duration %" PRId64, encoder_context->stream[i]->duration);
+
   if (prepare_audio_copy(encoder_context, decoder_context)) {
     logging("error while preparing audio copy");
     return -1;
